@@ -10,7 +10,11 @@ start () {
 	logsh "【$service】" "正在启动${appname}服务... "
 	open_port
 	write_firewall_start
-	daemon ${mbroot}/apps/${appname}/bin/${appname} -p ${port} ash
+	if [ -n "${cert_file}" -a -n "${key_file}" ]; then
+		daemon ${mbroot}/apps/${appname}/bin/${appname} -p ${port} -6 -S -C ${cert_file} -K ${key_file} ssh root@127.0.0.1
+	else
+		daemon ${mbroot}/apps/${appname}/bin/${appname} -p ${port} -6 ssh root@127.0.0.1
+	fi
 	if [ $? -ne 0 ]; then
 		logsh "【$service】" "启动${appname}服务失败！"
 	else
@@ -37,7 +41,7 @@ status() {
 		status="未运行|0"
 	fi
 
-	mbdb set $appname.main.status="$status" 
+	mbdb set $appname.main.status="$status"
 }
 
 case "$1" in
