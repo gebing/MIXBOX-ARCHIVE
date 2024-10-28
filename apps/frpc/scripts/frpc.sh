@@ -6,7 +6,7 @@ eval `mbdb export frpc`
 [ -z "$tcp_mux" ] && tcp_mux="true"
 [ -z "$user" ] && user="mixbox"
 [ -z "$protocol" ] && protocol="tcp"
-[ -z "$runver" ] && runver=`${mbroot}/apps/${appname}/bin/${appname} -v`
+[ -z "$tls" ] && tls="true"
 
 set_config() {
 
@@ -15,12 +15,6 @@ set_config() {
 	if [ "$result" == '0' ]; then
 		logsh "【$service】" "${appname}配置出现问题！"
 		exit
-	fi
-
-	if [ "$(${mbroot}/apps/${appname}/bin/${appname} -v)" != "$runver" ]; then
-		logsh "【$service】" "检测到版本号更换，重新下载${appname}程序..."
-		wgetsh "${mbroot}/apps/${appname}/bin/${appname}" "$mburl/appsbin/frp-bin/$runver/frpc_${model}"
-		[ "$?" -ne 0 ] && logsh "【$service】" "下载${appname}程序失败！" && exit 1
  	fi  
 	
 	token=$(mbdb get ${appname}.main.token)
@@ -28,18 +22,16 @@ set_config() {
 	[common]
 	server_addr = $server
 	server_port = $server_port
-	log_file = ${mbroot}/var/log/${appname}.log
+	#log_file = ${mbroot}/var/log/${appname}.log
+	log_file = /tmp/log/${appname}.log
 	log_level = info
-	log_max_days = 1
+	log_max_days = 3
 	EOF
-	if [ "$runver" != "0.9.3" ]; then
-		echo "token = $token" >> ${mbroot}/apps/${appname}/config/${appname}.conf
-		echo "tcp_mux = $tcp_mux" >> ${mbroot}/apps/${appname}/config/${appname}.conf
-		echo "user = $user" >> ${mbroot}/apps/${appname}/config/${appname}.conf
-		echo "protocol = $protocol" >> ${mbroot}/apps/${appname}/config/${appname}.conf
-	else
-		echo "privilege_token = $token" >> ${mbroot}/apps/${appname}/config/${appname}.conf
-	fi
+	echo "token = $token" >> ${mbroot}/apps/${appname}/config/${appname}.conf
+	echo "tcp_mux = $tcp_mux" >> ${mbroot}/apps/${appname}/config/${appname}.conf
+	echo "user = $user" >> ${mbroot}/apps/${appname}/config/${appname}.conf
+	echo "protocol = $protocol" >> ${mbroot}/apps/${appname}/config/${appname}.conf
+	echo "tls_enable = $tls" >> ${mbroot}/apps/${appname}/config/${appname}.conf
 	mbdb show ${appname}.info | while read line
 	do
 		[ -z "${line}" ] || [ ${line:0:1} == "#" ] && continue
@@ -48,7 +40,7 @@ set_config() {
 		info="$(echo ${line} | cut -d'=' -f2)"
 		echo "[$name]" >> ${mbroot}/apps/${appname}/config/${appname}.conf
 		type=`cutsh $info 1`
-		[ "$type" != "http" -a "$type" != "tcp" ] &&  logsh "【$service】" "节点$name类型设置错误！" && exit
+		[ "$type" != "http" -a "$type" != "https" -a "$type" != "tcp" ] &&  logsh "【$service】" "节点$name类型设置错误！" && exit
 		echo "type = $type" >> ${mbroot}/apps/${appname}/config/${appname}.conf
 		echo "local_ip = `cutsh $info 2`" >> ${mbroot}/apps/${appname}/config/${appname}.conf
 		echo "local_port = `cutsh $info 3`" >> ${mbroot}/apps/${appname}/config/${appname}.conf
