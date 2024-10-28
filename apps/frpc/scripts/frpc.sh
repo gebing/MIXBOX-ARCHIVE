@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 source /etc/mixbox/bin/base
 eval `mbdb export frpc`
 
@@ -15,15 +15,14 @@ set_config() {
 	if [ "$result" == '0' ]; then
 		logsh "【$service】" "${appname}配置出现问题！"
 		exit
- 	fi  
-	
+ 	fi
+
 	token=$(mbdb get ${appname}.main.token)
 	cat > ${mbroot}/apps/${appname}/config/${appname}.conf <<-EOF
 	[common]
 	server_addr = $server
 	server_port = $server_port
-	#log_file = ${mbroot}/var/log/${appname}.log
-	log_file = /tmp/log/${appname}.log
+	log_file = ${mbroot}/var/log/${appname}.log
 	log_level = info
 	log_max_days = 3
 	EOF
@@ -74,7 +73,7 @@ start () {
 	logsh "【$service】" "正在启动${appname}服务... "
 	cru a "${appname}" "0 6 * * * ${mbroot}/apps/${appname}/scripts/${appname}.sh restart"
 	set_config
-	
+
 	# open_port
     # write_firewall_start
 	daemon ${mbroot}/apps/${appname}/bin/${appname} -c ${mbroot}/apps/${appname}/config/${appname}.conf
@@ -82,16 +81,16 @@ start () {
             logsh "【$service】" "启动${appname}服务失败！"
     else
             logsh "【$service】" "启动${appname}服务完成！"
-        fi    
+        fi
 
 }
 
 stop () {
 
 	logsh "【$service】" "正在停止${appname}服务... "
-	
+
 	killall -9 ${appname} &> /dev/null
-	# 
+	#
 	rm -rf ${mbroot}/apps/${appname}/config/${appname}.conf > /dev/null 2>&1
 	[ "$enable" == '0' ] && destroy
 
@@ -112,7 +111,7 @@ status() {
 	else
 		status="运行服务器: $server:$server_port|1"
 	fi
-	mbdb set $appname.main.status="$status" 
+	mbdb set $appname.main.status="$status"
 
 }
 
