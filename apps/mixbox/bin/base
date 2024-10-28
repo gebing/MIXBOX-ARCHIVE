@@ -13,8 +13,8 @@ mbbackup="/etc/mbbackup"
 [ -z "$mbdisk" ] && mbdisk="${mbroot}"
 wanip=$(ubus call network.interface.wan status 2> /dev/null | grep \"address\" | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}') || wanip="127.0.0.1"
 lanip=$(uci get network.lan.ipaddr 2> /dev/null) || lanip="127.0.0.1"
-profilepath=$(mbdb get mixbox.main.profilepath) 
-libpath=$(mbdb get mixbox.main.libpath) 
+profilepath=$(mbdb get mixbox.main.profilepath)
+libpath=$(mbdb get mixbox.main.libpath)
 mbver=$(mbdb get mixbox.main.version)
 mbtmp=/tmp/mbtmp
 [ ! -d "${mbtmp}" ] && mkdir -p ${mbtmp}
@@ -68,7 +68,7 @@ cutsh() {
 		echo $1 | cut -d"${delimiter}" -f"$2"
 	elif [ -n "$1" -a -z "$2" ]; then
 		[ -n "$2" ] && delimiter="$2"
-		xargs | cut -d"${delimiter}" -f"$1" 
+		xargs | cut -d"${delimiter}" -f"$1"
 	fi
 
 }
@@ -95,7 +95,7 @@ logsh() {
 			echo_date "$2" | tee ${mbroot}/var/log/mixbox.log
 		fi
 	fi
-	
+
 }
 
 pssh() {
@@ -147,7 +147,7 @@ readsh() {
 		res="$res"
 		return 0
 	fi
-	
+
 	if [ "$res" = '-1' ]; then
 		mbdb del ${appname}.main.$uciname
 	else
@@ -184,7 +184,7 @@ write_firewall_start(){
 		logsh "【$service】" "添加nat-start触发事件..."
 		mbdb set mixbox.firewall.${appname}=1
 	fi
-	
+
 }
 
 remove_firewall_start(){
@@ -195,9 +195,9 @@ remove_firewall_start(){
 
 daemon() {
 	local binname="$(basename "${1}")"
-	if type nohup &>/dev/null; then 
+	if type nohup &>/dev/null; then
 		nohup $@ &> ${mbroot}/var/log/${binname}.log &
-	else 
+	else
 		$@ &> ${mbroot}/var/log/${binname}.log &
 	fi
 	return $?
@@ -209,9 +209,11 @@ open_port () {
 	[ -n "$2" ] && protocol="$2" || protocol="tcp"
     if [ "$openport" = '1' ]; then
     	if [ -n "$(echo ${port} | grep ',')" ]; then
-    		iptables -I INPUT -p "$protocol" -m multiport --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT 
+    		iptables -I INPUT -p "$protocol" -m multiport --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT
+    		ip6tables -I INPUT -p "$protocol" -m multiport --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT
     	else
-    		iptables -I INPUT -p "$protocol" --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT 
+    		iptables -I INPUT -p "$protocol" --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT
+    		ip6tables -I INPUT -p "$protocol" --dport "${port}" -m comment --comment "mixbox-${appname}" -j ACCEPT
     	fi
     fi
 
@@ -220,6 +222,7 @@ open_port () {
 close_port () {
 
 	eval `iptables -S | grep "mixbox-${appname}" | sed -e 's/-A/iptables -D/g' | sed -e 's/\$/;/g'`
+	eval `ip6tables -S | grep "mixbox-${appname}" | sed -e 's/-A/ip6tables -D/g' | sed -e 's/\$/;/g'`
 
 }
 
