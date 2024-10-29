@@ -1,0 +1,14 @@
+
+config config 'main'
+	option service 'tailscale'
+	option appname 'tailscale'
+	option needver '0.0.1'
+	option supports 'linux_aarch64,linux_arm,linux_mips,linux_x86_64'
+	option appinfo '一个跨平台且易于使用的虚拟局域网VPN'
+	option version '1.74.1-r1'
+	option port '41641'
+	option hostname 'gebing-ax6'
+	option extra_args '--advertise-routes=192.168.31.0/24'
+	option enable '1'
+	option status '运行端口号: 41641|1'
+
